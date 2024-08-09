@@ -19,7 +19,7 @@ const signingString = "my data"
 func Test_cryptoHmac(t *testing.T) {
 	key := []byte("...private_key...")
 	hasher := hmac.New(
-		crypto.SHA256.New, // 可以選擇其他不同的方法，例如SHA512
+		crypto.SHA256.New, // 可以選擇其他不同的方法, 例如SHA512，但記得要import _ "crypto/sha512"
 		key,
 	)
 
