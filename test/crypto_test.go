@@ -56,7 +56,7 @@ func Test_cryptoHmac(t *testing.T) {
 func Test_cryptoRSA(t *testing.T) {
 	// 生成密鑰
 	var (
-		// rsaKey 在實務上你可以生成此key，然後用
+		// rsaKey 在實務上你可以生成此key，然後將其資料保存成檔案
 		rsaKey *rsa.PrivateKey // 包含鑰在內
 		err    error
 	)
@@ -103,8 +103,8 @@ func Test_cryptoRSA(t *testing.T) {
 	rsaPublicKey = &rsaKey.PublicKey // 這邊的正常流程應該是要去讀取公鑰的文件，然後轉換成公鑰，也就是: x509.ParsePKCS1PublicKey(blockPublic.Bytes)
 	hasher = hash.New()
 	hasher.Write([]byte(signingString))
-	if err = rsa.VerifyPKCS1v15(rsaPublicKey, hash, hasher.Sum(nil), // 使用公鑰對私鑰加簽的內容進行驗證
-		signedBytes, // 私鑰加簽內容
+	if err = rsa.VerifyPKCS1v15(rsaPublicKey, hash, hasher.Sum(nil), // 計算出來的雜湊值+公鑰+之前的簽名，可以知道是否同源
+		signedBytes, // 私鑰加簽內容(之前的簽名)
 	); err != nil {
 		t.Fatal(err)
 	}

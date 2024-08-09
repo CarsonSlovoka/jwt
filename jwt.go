@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-// GenSignBytes 生成出jwt字串的內容
+// GenSignBytes 依據header, claims生成出jwt需要被加簽的內容
 func GenSignBytes(header, claims map[string]any) ([]byte, error) {
 	h, err := json.Marshal(header)
 	if err != nil {

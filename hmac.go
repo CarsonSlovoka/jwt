@@ -34,14 +34,16 @@ func VerifyHMAC(
 	signedBytes []byte, // 之前透過Server加簽過的內容, 在jwt下可以透過signingBytes來取得到此內容，理論上要和之前server加簽的原始內容相同
 	privateKey []byte,
 ) error {
-	hasher := hmac.New(hash.New, privateKey)
-	// fmt.Printf("驗證的內容:%s\n", string(signingBytes))
-	hasher.Write(signingBytes)
-
+	// 先取得之前的加簽出來的內容
 	signature, err := decodeSegment(signedBytes) // 通常特徵也會用URLEncoding，所以也要還原回去，才是之前算出來的特徵(之前加簽出來的內容)
 	if err != nil {
 		return err
 	}
+
+	// 加簽本次的內容
+	hasher := hmac.New(hash.New, privateKey)
+	// fmt.Printf("驗證的內容:%s\n", string(signingBytes))
+	hasher.Write(signingBytes)
 
 	if hmac.Equal(hasher.Sum(nil), signature) { // 現有資料算出來的內容，應該要與之前server加簽出來的內容相同
 		return nil
