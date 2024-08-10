@@ -15,6 +15,7 @@ var MarshalSingleStringAsArray = true
 
 // NumericDate represents a JSON numeric date value, as referenced at
 // https://datatracker.ietf.org/doc/html/rfc7519#section-2.
+// 主要就是時間，但我們希望可以依據 jwt.TimePrecision 來變化爬取的規則
 type NumericDate struct {
 	time.Time
 }
@@ -56,23 +57,25 @@ func (date *NumericDate) UnmarshalJSON(b []byte) (err error) {
 	return nil
 }
 
+// ClaimStrings 自定義了json.Unmarshal, json.MarshalJSON 為了
+// string => [string] (需要透過 jwt.MarshalSingleStringAsArray )
+// []any => []string
 type ClaimStrings []string
 
 func (s *ClaimStrings) UnmarshalJSON(data []byte) (err error) {
-	var value interface{}
+	var value any
 
 	if err = json.Unmarshal(data, &value); err != nil {
 		return err
 	}
 
 	var aud []string
-
 	switch v := value.(type) {
 	case string:
 		aud = append(aud, v)
 	case []string:
 		aud = v
-	case []interface{}:
+	case []any:
 		for _, vv := range v {
 			vs, ok := vv.(string)
 			if !ok {
@@ -93,6 +96,6 @@ func (s ClaimStrings) MarshalJSON() (b []byte, err error) {
 	if len(s) == 1 && !MarshalSingleStringAsArray {
 		return json.Marshal(s[0])
 	}
-
-	return json.Marshal([]string(s))
+	// return json.Marshal(s) // 這個又會調用自己
+	return json.Marshal([]string(s)) // 轉換成[]string // https://go.dev/play/p/eRhO-nnKTSE
 }
