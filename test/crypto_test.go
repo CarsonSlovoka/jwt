@@ -3,11 +3,13 @@ package test
 import (
 	"bytes"
 	"crypto"
+	"crypto/ed25519"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"testing"
 )
 
@@ -73,7 +75,7 @@ func Test_cryptoRSA(t *testing.T) {
 		_ = pem.Encode(privateBuf, &pem.Block{
 			Type:    "RSA PRIVATE KEY",
 			Headers: pemBlockHeader,
-			Bytes:   x509.MarshalPKCS1PrivateKey(rsaKey),
+			Bytes:   x509.MarshalPKCS1PrivateKey(rsaKey), // PKCS1是一種標準，裡面將資料轉換成適合的長度和格式。例如: 格式: 固定前面多少byte是xxx, 長度: 填充多少垃圾來達到滿長度, 模擬範例: https://go.dev/play/p/W1vH5B7eL5z
 		})
 
 		publicBuf := bytes.NewBuffer(nil)
@@ -103,9 +105,46 @@ func Test_cryptoRSA(t *testing.T) {
 	rsaPublicKey = &rsaKey.PublicKey // 這邊的正常流程應該是要去讀取公鑰的文件，然後轉換成公鑰，也就是: x509.ParsePKCS1PublicKey(blockPublic.Bytes)
 	hasher = hash.New()
 	hasher.Write([]byte(signingString))
-	if err = rsa.VerifyPKCS1v15(rsaPublicKey, hash, hasher.Sum(nil), // 計算出來的雜湊值+公鑰+之前的簽名，可以知道是否同源
+	if err = rsa.VerifyPKCS1v15(rsaPublicKey, hash, hasher.Sum(nil), // 計算出來的雜湊值公鑰之前的簽名，可以知道是否同源
 		signedBytes, // 私鑰加簽內容(之前的簽名)
 	); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// 遺憾的是目前go標準庫，沒有將ed25519或者rsa變成PKCS8的格式，所以出來的內容都會比較短，沒辦法當成Github SSH key用 https://stackoverflow.com/q/71850135/9935654
+// 如果要生成ssh key，請考慮使用: "golang.org/x/crypto/ssh"
+// https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
+func Test_cryptoEd25519(t *testing.T) {
+	// 生成 Ed25519 公鑰和私鑰
+	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal("生成密鑰失敗:", err)
+		return
+	}
+
+	// 保存至檔案
+	var pemBlockHeader map[string]string // 可選項
+	privateBuf := pem.EncodeToMemory(&pem.Block{
+		Type:    "OPENSSH PRIVATE KEY",
+		Headers: pemBlockHeader,
+		Bytes:   privateKey,
+	})
+
+	publicBuf := pem.EncodeToMemory(&pem.Block{
+		Type:    "OPENSSH PUBLIC123 KEY",
+		Headers: pemBlockHeader,
+		Bytes:   publicKey,
+	})
+	fmt.Println(string(privateBuf))
+	fmt.Println(string(publicBuf))
+
+	// 加簽
+	var message = []byte("Hello, ED25519!")
+	signature := ed25519.Sign(privateKey, message)
+
+	// 驗證
+	if !ed25519.Verify(publicKey, message, signature) {
+		t.Fatal("invalid")
 	}
 }
