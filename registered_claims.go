@@ -36,32 +36,32 @@ type RegisteredClaims struct {
 	ID string `json:"jti,omitempty"`
 }
 
-// GetExpirationTime implements the Claims interface.
+// GetExpirationTime implements the IClaims interface.
 func (c RegisteredClaims) GetExpirationTime() (*NumericDate, error) {
 	return c.ExpiresAt, nil
 }
 
-// GetNotBefore implements the Claims interface.
+// GetNotBefore implements the IClaims interface.
 func (c RegisteredClaims) GetNotBefore() (*NumericDate, error) {
 	return c.NotBefore, nil
 }
 
-// GetIssuedAt implements the Claims interface.
+// GetIssuedAt implements the IClaims interface.
 func (c RegisteredClaims) GetIssuedAt() (*NumericDate, error) {
 	return c.IssuedAt, nil
 }
 
-// GetAudience implements the Claims interface.
+// GetAudience implements the IClaims interface.
 func (c RegisteredClaims) GetAudience() (ClaimStrings, error) {
 	return c.Audience, nil
 }
 
-// GetIssuer implements the Claims interface.
+// GetIssuer implements the IClaims interface.
 func (c RegisteredClaims) GetIssuer() (string, error) {
 	return c.Issuer, nil
 }
 
-// GetSubject implements the Claims interface.
+// GetSubject implements the IClaims interface.
 func (c RegisteredClaims) GetSubject() (string, error) {
 	return c.Subject, nil
 }
