@@ -171,7 +171,7 @@ func (p *Parser) parseHeader(headerStr string) (map[string]any, error) {
 		return nil, fmt.Errorf("failed to parse header: %w %w", err, jwt.ErrTokenMalformed)
 	}
 	if header["typ"] != "JWT" {
-		return nil, fmt.Errorf("invalid token type: %s %w", header["typ"], jwt.ErrTokenMalformed)
+		return nil, fmt.Errorf("invalid token type: %v %w", header["typ"], jwt.ErrTokenMalformed)
 	}
 	algName, ok := header["alg"]
 	if !ok {

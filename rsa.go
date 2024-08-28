@@ -58,11 +58,11 @@ func (m *SigningMethodRSA) Verify(
 	hasher := m.Hash.New()
 	hasher.Write(signingBytes)
 
-	if rsa.VerifyPKCS1v15(
+	if err = rsa.VerifyPKCS1v15(
 		publicKey,
 		m.Hash, hasher.Sum(nil),
 		signature, // 計算出來的雜湊值+公鑰+之前的簽名，可以知道是否同源
-	) != nil {
+	); err != nil {
 		return fmt.Errorf("%w %w", err, ErrSignatureInvalid)
 	}
 	return nil
