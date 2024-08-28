@@ -9,7 +9,7 @@ on:
       - temp
 defaults:
   run:
-    working-directory: ./v2
+    working-directory: .
     shell: pwsh
 jobs:
   test:
