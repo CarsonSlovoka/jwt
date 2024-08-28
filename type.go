@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+// KeyFunc 回傳值 key 為 ISigningMethod.Verify 所用到的key，因此可以根據token的類型去回傳特定的鑰匙
+// 另外你也可以回傳 []key 的型態 請參考 parser.validate
+type KeyFunc func(*Token) (key any, err error)
+
 var TimePrecision = time.Second
 
 // MarshalSingleStringAsArray 如果數值只是一個字串，就會把它變放進到slice裡面，即 "my-str" => ["my-str"]
@@ -58,7 +62,8 @@ func (date *NumericDate) UnmarshalJSON(b []byte) (err error) {
 }
 
 // ClaimStrings 自定義了json.Unmarshal, json.MarshalJSON 為了
-// string => [string] (需要透過 jwt.MarshalSingleStringAsArray )
+// input => output
+// string => [string]  (需要透過 jwt.MarshalSingleStringAsArray 設定(預設啟用))
 // []any => []string
 type ClaimStrings []string
 

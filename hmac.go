@@ -1,48 +1,69 @@
+// HMAC: Keyed-Hash Message Authentication Code
+// HMAC 使用對稱式加密，加解與驗證都用同一把鑰匙
+
 package jwt
 
 import (
 	"crypto"
 	"crypto/hmac"
-	"encoding/base64"
 	"fmt"
 )
 
-func signByHMAC(hash crypto.Hash, signingBytes []byte, privateKey []byte) []byte {
-	hasher := hmac.New(hash.New, privateKey)
+type SigningMethodHMAC struct {
+	Name string
+	Hash crypto.Hash // Hash本質是一個uint
+}
+
+var (
+	SigningMethodHMAC256 *SigningMethodHMAC
+	SigningMethodHMAC384 *SigningMethodHMAC
+	SigningMethodHMAC512 *SigningMethodHMAC
+)
+
+func init() {
+	SigningMethodHMAC256 = &SigningMethodHMAC{"HS256", crypto.SHA256}
+	SigningMethodHMAC384 = &SigningMethodHMAC{"HS384", crypto.SHA384}
+	SigningMethodHMAC512 = &SigningMethodHMAC{"HS512", crypto.SHA512}
+}
+
+func (m *SigningMethodHMAC) AlgName() string {
+	return m.Name
+}
+
+func (m *SigningMethodHMAC) Sign(signingBytes []byte, key any) ([]byte, error) {
+	privateKey, ok := key.([]byte)
+	if !ok {
+		return nil, fmt.Errorf("HMAC verify expects []byte. %w", ErrInvalidKeyType)
+	}
+
+	// 由於hash本身是一個uint，所以若你不是從標準庫的變數去給，那麼數值就可能會有問題
+	if !m.Hash.Available() {
+		return nil, ErrHashUnavailable
+	}
+
+	hasher := hmac.New(m.Hash.New, privateKey)
 	hasher.Write(signingBytes)
-	return hasher.Sum(nil)
+	return hasher.Sum(nil), nil
 }
 
-func GenerateTokenFromHMAC(claims map[string]any, privateKey []byte) ([]byte, error) {
-	header := map[string]any{
-		"typ": "JWT",
-		"alg": "HS256",
+func (m *SigningMethodHMAC) Verify(
+	signingBytes []byte, // 本次傳過來的驗證內容: parts[0:2]
+	signature []byte, // parts[2]
+	key any,
+) (err error) {
+	privateKey, ok := key.([]byte)
+	if !ok {
+		return fmt.Errorf("HMAC verify expects []byte. %w", ErrInvalidKeyType)
 	}
-	singingBytes, err := GenSignBytes(header, claims)
-	fmt.Printf("加簽的內容:%s\n", string(singingBytes))
-	if err != nil {
-		return nil, err
-	}
-	signature := signByHMAC(crypto.SHA256, singingBytes, privateKey)
-	// return bytes.Join([][]byte{singingBytes, signature}, []byte{'.'}), nil // signature沒做base64.RawURLEncoding
-	return base64.RawURLEncoding.AppendEncode(append(singingBytes, '.'), signature), nil
-}
 
-func VerifyHMAC(
-	hash crypto.Hash,
-	signingBytes []byte, // 本次內容
-	signedBytes []byte, // 之前透過Server加簽過的內容, 在jwt下可以透過signingBytes來取得到此內容，理論上要和之前server加簽的原始內容相同
-	privateKey []byte,
-) error {
 	// 先取得之前的加簽出來的內容
-	signature, err := decodeSegment(signedBytes) // 通常特徵也會用URLEncoding，所以也要還原回去，才是之前算出來的特徵(之前加簽出來的內容)
+	signature, err = decodeSegment(signature) // 通常特徵也會用URLEncoding，所以也要還原回去，才是之前算出來的特徵(之前加簽出來的內容)
 	if err != nil {
 		return err
 	}
 
 	// 加簽本次的內容
-	hasher := hmac.New(hash.New, privateKey)
-	// fmt.Printf("驗證的內容:%s\n", string(signingBytes))
+	hasher := hmac.New(m.Hash.New, privateKey)
 	hasher.Write(signingBytes)
 
 	if hmac.Equal(hasher.Sum(nil), signature) { // 現有資料算出來的內容，應該要與之前server加簽出來的內容相同

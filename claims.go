@@ -5,17 +5,17 @@ import (
 	"fmt"
 )
 
-// Claims https://datatracker.ietf.org/doc/html/rfc7519#section-4.1 namely
+// IClaims https://datatracker.ietf.org/doc/html/rfc7519#section-4.1 namely
 // {exp, iat, nbf, iss, sub, aud}
 // 之所以提供這個方法，只是為了在驗證的時候，可以避免用map打key的方式
 // 另外因為驗證的時後claims我們能得到的資訊只有字串，所以這邊的工作還要負責把字串轉換成合適的型別
-type Claims interface {
+type IClaims interface {
 	GetExpirationTime() (*NumericDate, error)
 	GetIssuedAt() (*NumericDate, error)
 	GetNotBefore() (*NumericDate, error)
 	GetIssuer() (string, error)
 	GetSubject() (string, error)
-	GetAudience() ([]string, error)
+	GetAudience() (ClaimStrings, error)
 }
 
 type MapClaims map[string]any

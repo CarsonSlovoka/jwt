@@ -2,13 +2,12 @@ package jwt_test
 
 import (
 	"bytes"
-	"crypto"
 	"github.com/CarsonSlovoka/go-jwt"
 	"testing"
 	"time"
 )
 
-var testClaims = map[string]any{
+var testClaims = jwt.MapClaims{
 	"iss": "https://www.example.com",
 	"sub": "user-XXX",
 	"aud": []string{"example-app1", "example-app2"},
@@ -19,9 +18,10 @@ var testClaims = map[string]any{
 }
 
 // http://jwt.io/
-func TestGenerateTokenFromHMAC(t *testing.T) {
+func TestSigningMethodHMAC_Sign(t *testing.T) {
 	privateKey := []byte("helloWorld")
-	signedBytes, err := jwt.GenerateTokenFromHMAC(testClaims, privateKey)
+	token := jwt.NewWithClaims(jwt.SigningMethodHMAC256, testClaims)
+	signedBytes, err := token.SignedBytes(privateKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,11 +31,8 @@ func TestGenerateTokenFromHMAC(t *testing.T) {
 		t.Fatal()
 	}
 	signature := parts[2]
-	if err = jwt.VerifyHMAC(crypto.SHA256,
-		bytes.Join([][]byte{parts[0], parts[1]}, []byte{'.'}),
-		signature,
-		privateKey,
-	); err != nil {
+	if err = jwt.SigningMethodHMAC256.Verify(
+		signedBytes[:bytes.LastIndexByte(signedBytes, '.')], signature, privateKey); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -5,53 +5,71 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	_ "crypto/sha512"
-	"encoding/base64"
+	"fmt"
 )
 
-func SignByRSA(
-	hash crypto.Hash, // 假設你用crypto.SHA512，那麼import必須要包含"crypto/sha512"，否則會報錯
-	signingBytes []byte, privateKey *rsa.PrivateKey) ([]byte, error) {
-	hasher := hash.New()
-	hasher.Write(signingBytes)
-	return rsa.SignPKCS1v15(rand.Reader, privateKey, hash, hasher.Sum(nil))
+type SigningMethodRSA struct {
+	Name string
+	Hash crypto.Hash // 假設你用crypto.SHA512，那麼import必須要包含"crypto/sha512"，否則會報錯
 }
 
-func GenerateTokenFromRSA(claims map[string]any, privateKey *rsa.PrivateKey) ([]byte, error) {
-	header := map[string]any{
-		"typ": "JWT",
-		"alg": "RS512",
-	}
-	singingBytes, err := GenSignBytes(header, claims)
-	if err != nil {
-		return nil, err
-	}
-	signature, err := SignByRSA(crypto.SHA512, singingBytes, privateKey)
-	if err != nil {
-		return nil, err
-	}
-	return base64.RawURLEncoding.AppendEncode(append(singingBytes, '.'), signature), nil
+var (
+	SigningMethodRSA256 *SigningMethodRSA
+	SigningMethodRSA384 *SigningMethodRSA
+	SigningMethodRSA512 *SigningMethodRSA
+)
+
+func init() {
+	SigningMethodRSA256 = &SigningMethodRSA{"RS256", crypto.SHA256}
+	SigningMethodRSA384 = &SigningMethodRSA{"RS384", crypto.SHA384}
+	SigningMethodRSA512 = &SigningMethodRSA{"RS512", crypto.SHA512}
 }
 
-func VerifyRSA(
-	hash crypto.Hash,
-	signingBytes []byte, // 本次內容
-	signedBytes []byte, // 之前加簽過的內容
-	publicKey *rsa.PublicKey,
-) error {
-	signature, err := decodeSegment(signedBytes)
-	if err != nil {
-		return err
+func (m *SigningMethodRSA) AlgName() string {
+	return m.Name
+}
+
+func (m *SigningMethodRSA) Sign(signingBytes []byte, key any) ([]byte, error) {
+	privateKey, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("RSA verify expects *rsa.PrivateKey. %w", ErrInvalidKeyType)
 	}
 
-	// 計算本次內容的雜湊值
-	hasher := hash.New()
+	if !m.Hash.Available() {
+		return nil, ErrHashUnavailable
+	}
+
+	hasher := m.Hash.New()
 	hasher.Write(signingBytes)
+	return rsa.SignPKCS1v15(rand.Reader, privateKey, m.Hash, hasher.Sum(nil))
+}
+
+func (m *SigningMethodRSA) Verify(
+	signingBytes []byte,
+	signature []byte,
+	key any,
+) (err error) {
+	publicKey, ok := key.(*rsa.PublicKey)
+	if !ok {
+		return fmt.Errorf("RSA verify expects *rsa.PublicKey. %w", ErrInvalidKeyType)
+	}
+
+	// 先取得之前的加簽出來的內容
+	signature, err = decodeSegment(signature)
+	if err != nil {
+		return fmt.Errorf("could not base64 decode signature %w", err)
+	}
+
+	// 加簽本次的內容
+	hasher := m.Hash.New()
+	hasher.Write(signingBytes)
+
 	if rsa.VerifyPKCS1v15(
 		publicKey,
-		hash, hasher.Sum(nil),
+		m.Hash, hasher.Sum(nil),
 		signature, // 計算出來的雜湊值+公鑰+之前的簽名，可以知道是否同源
 	) != nil {
-		return ErrSignatureInvalid
+		return fmt.Errorf("%w %w", err, ErrSignatureInvalid)
 	}
 	return nil
 }

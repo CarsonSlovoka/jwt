@@ -7,7 +7,7 @@ package jwt
 //
 // This type can be used on its own, but then additional private and
 // public claims embedded in the JWT will not be parsed. The typical use-case
-// therefore is to embedded this in a user-defined claim type.
+// therefore is embedded to this in a user-defined claim type.
 //
 // See examples for how to use this with your own claim types.
 // 這些項目為目前已經被註冊進去的標準
