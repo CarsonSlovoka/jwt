@@ -1,7 +1,6 @@
 package jwt_test
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"github.com/CarsonSlovoka/go-jwt"
@@ -13,21 +12,13 @@ func TestSigningMethodRSA_Sign(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	signedBytes, err := jwt.GenerateToken(jwt.SigningMethodRSA256, testClaims, rsaKey)
+	m := jwt.SigningMethodRSA256
+	msg := []byte("hello")
+	signature, err := m.Sign(msg, rsaKey)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	parts := bytes.Split(signedBytes, []byte{'.'})
-	if len(parts) != 3 {
-		t.Fatal()
-	}
-	signature := parts[2]
-
-	if err = jwt.SigningMethodRSA256.Verify(
-		bytes.Join([][]byte{parts[0], parts[1]}, []byte{'.'}),
-		signature,
-		&rsaKey.PublicKey); err != nil {
+	if err = m.Verify(msg, signature, &rsaKey.PublicKey); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -32,7 +32,7 @@ func (m *SigningMethodRSA) AlgName() string {
 func (m *SigningMethodRSA) Sign(signingBytes []byte, key any) ([]byte, error) {
 	privateKey, ok := key.(*rsa.PrivateKey)
 	if !ok {
-		return nil, fmt.Errorf("RSA verify expects *rsa.PrivateKey. %w", ErrInvalidKeyType)
+		return nil, fmt.Errorf("RSA sign expects *rsa.PrivateKey. %w", ErrInvalidKeyType)
 	}
 
 	if !m.Hash.Available() {
@@ -52,12 +52,6 @@ func (m *SigningMethodRSA) Verify(
 	publicKey, ok := key.(*rsa.PublicKey)
 	if !ok {
 		return fmt.Errorf("RSA verify expects *rsa.PublicKey. %w", ErrInvalidKeyType)
-	}
-
-	// 先取得之前的加簽出來的內容
-	signature, err = decodeSegment(signature)
-	if err != nil {
-		return fmt.Errorf("could not base64 decode signature %w", err)
 	}
 
 	// 加簽本次的內容

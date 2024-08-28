@@ -86,8 +86,14 @@ func (p *Parser) ParseWithClaims(
 	}
 	token.Claims = iClaims
 
-	// decode給Verify之中自己做
-	// signature, _ := base64.RawURLEncoding.DecodeString(parts[2])
+	// 這邊統一將signature解碼，不要在該演算法的Verify做這件事:
+	// 1. 演算法只是提供驗證，所以不應該假設signature有被URLDecode
+	// 2. 就算放在演算法裡寫，也要每一個演算法的Verify都要寫URLDecode相當麻煩
+	var signature []byte // 通常特徵也會用URLEncoding，所以也要還原回去，才是之前算出來的特徵(之前加簽出來的內容)
+	signature, err = base64.RawURLEncoding.DecodeString(parts[2])
+	if err != nil {
+		return nil, fmt.Errorf("could not base64 decode signature %w", err)
+	}
 
 	return func(
 		validateHeader func(map[string]any) error,
@@ -95,7 +101,7 @@ func (p *Parser) ParseWithClaims(
 		keyFunc jwt.KeyFunc,
 	) error {
 		return p.validate(token, validateHeader, validateCustomClaims,
-			[]byte(strings.Join(parts[0:2], ".")), []byte(parts[2]), keyFunc)
+			[]byte(strings.Join(parts[0:2], ".")), signature, keyFunc)
 	}, nil
 }
 

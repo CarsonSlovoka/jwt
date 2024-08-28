@@ -1,7 +1,6 @@
 package jwt_test
 
 import (
-	"bytes"
 	"github.com/CarsonSlovoka/go-jwt"
 	"testing"
 	"time"
@@ -18,21 +17,15 @@ var testClaims = jwt.MapClaims{
 }
 
 // http://jwt.io/
-func TestSigningMethodHMAC_Sign(t *testing.T) {
-	privateKey := []byte("helloWorld")
-	token := jwt.NewWithClaims(jwt.SigningMethodHMAC256, testClaims)
-	signedBytes, err := token.SignedBytes(privateKey)
+func TestSigningMethodHMAC_Verify(t *testing.T) {
+	m := jwt.SigningMethodHMAC256
+	privateKey := []byte("my key")
+	signature, err := m.Sign([]byte("Hello"), privateKey)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	parts := bytes.Split(signedBytes, []byte{'.'})
-	if len(parts) != 3 {
+	if err = m.Verify([]byte("Hello"), signature, privateKey); err != nil {
 		t.Fatal()
-	}
-	signature := parts[2]
-	if err = jwt.SigningMethodHMAC256.Verify(
-		signedBytes[:bytes.LastIndexByte(signedBytes, '.')], signature, privateKey); err != nil {
-		t.Fatal(err)
 	}
 }

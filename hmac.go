@@ -33,7 +33,7 @@ func (m *SigningMethodHMAC) AlgName() string {
 func (m *SigningMethodHMAC) Sign(signingBytes []byte, key any) ([]byte, error) {
 	privateKey, ok := key.([]byte)
 	if !ok {
-		return nil, fmt.Errorf("HMAC verify expects []byte. %w", ErrInvalidKeyType)
+		return nil, fmt.Errorf("HMAC sign expects []byte. %w", ErrInvalidKeyType)
 	}
 
 	// 由於hash本身是一個uint，所以若你不是從標準庫的變數去給，那麼數值就可能會有問題
@@ -56,17 +56,11 @@ func (m *SigningMethodHMAC) Verify(
 		return fmt.Errorf("HMAC verify expects []byte. %w", ErrInvalidKeyType)
 	}
 
-	// 先取得之前的加簽出來的內容
-	signature, err = decodeSegment(signature) // 通常特徵也會用URLEncoding，所以也要還原回去，才是之前算出來的特徵(之前加簽出來的內容)
-	if err != nil {
-		return err
-	}
-
 	// 加簽本次的內容
 	hasher := hmac.New(m.Hash.New, privateKey)
 	hasher.Write(signingBytes)
 
-	if hmac.Equal(hasher.Sum(nil), signature) { // 現有資料算出來的內容，應該要與之前server加簽出來的內容相同
+	if hmac.Equal(hasher.Sum(nil), signature) { // 現有資料算出來的內容，應該要與之前server加簽出來的內容相同;
 		return nil
 	}
 	return ErrSignatureInvalid
