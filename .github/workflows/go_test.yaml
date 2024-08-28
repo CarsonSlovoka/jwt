@@ -1,0 +1,47 @@
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+name: Go Test
+on:
+  push:
+    branches-ignore:
+      - temp
+  pull_request:
+    branches-ignore:
+      - temp
+defaults:
+  run:
+    working-directory: ./v2
+    shell: pwsh
+jobs:
+  test:
+    strategy:
+      matrix:
+        # [ubuntu-latest, macos-latest, windows-latest]
+        platform: [ windows-latest ]
+        go-version: [ 1.23.x ]
+    runs-on: ${{ matrix.platform }}
+    name: Integration tests
+    steps:
+      - name: Check out code into the Go module directory.
+        uses: actions/checkout@v4
+      - name: Install Go.
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          check-latest: true
+          cache-dependency-path: go.sum
+          cache: true
+
+      - name: go mod tidy
+        run: go mod tidy
+
+      - name: test All
+        run: go test -v -coverpkg=./... -coverprofile="coverage.txt" ./...
+
+      - name: Cover Func
+        run: go tool cover -func="coverage.txt"
+
+      - name: Upload coverage file
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifact  # go tool cover -html="coverage.txt"
+          path: ./coverage.txt # coverage.txt
