@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/CarsonSlovoka/go-jwt"
-	"github.com/CarsonSlovoka/go-jwt/validator"
+	"github.com/CarsonSlovoka/jwt"
+	"github.com/CarsonSlovoka/jwt/validator"
 	"strings"
 )
 

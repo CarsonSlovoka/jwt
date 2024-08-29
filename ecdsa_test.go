@@ -4,7 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"github.com/CarsonSlovoka/go-jwt"
+	"github.com/CarsonSlovoka/jwt"
 	"testing"
 )
 

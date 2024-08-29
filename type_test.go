@@ -4,7 +4,7 @@ package jwt_test
 
 import (
 	"encoding/json"
-	"github.com/CarsonSlovoka/go-jwt"
+	"github.com/CarsonSlovoka/jwt"
 	"math"
 	"testing"
 	"time"

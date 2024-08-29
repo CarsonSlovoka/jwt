@@ -8,9 +8,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
-	"github.com/CarsonSlovoka/go-jwt"
-	"github.com/CarsonSlovoka/go-jwt/parser"
-	"github.com/CarsonSlovoka/go-jwt/validator"
+	"github.com/CarsonSlovoka/jwt"
+	"github.com/CarsonSlovoka/jwt/parser"
+	"github.com/CarsonSlovoka/jwt/validator"
 	"testing"
 )
 

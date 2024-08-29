@@ -3,7 +3,7 @@ package jwt_test
 import (
 	"crypto/rand"
 	"crypto/rsa"
-	"github.com/CarsonSlovoka/go-jwt"
+	"github.com/CarsonSlovoka/jwt"
 	"testing"
 )
 

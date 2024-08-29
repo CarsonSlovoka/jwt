@@ -3,8 +3,8 @@ package validator_test
 import (
 	"errors"
 	"fmt"
-	"github.com/CarsonSlovoka/go-jwt"
-	"github.com/CarsonSlovoka/go-jwt/parser"
+	"github.com/CarsonSlovoka/jwt"
+	"github.com/CarsonSlovoka/jwt/parser"
 	"testing"
 )
 

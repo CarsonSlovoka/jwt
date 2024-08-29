@@ -1,7 +1,7 @@
 package jwt_test
 
 import (
-	"github.com/CarsonSlovoka/go-jwt"
+	"github.com/CarsonSlovoka/jwt"
 	"testing"
 	"time"
 )

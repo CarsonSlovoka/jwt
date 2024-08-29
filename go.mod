@@ -1,3 +1,3 @@
-module github.com/CarsonSlovoka/go-jwt
+module github.com/CarsonSlovoka/jwt
 
 go 1.23.0

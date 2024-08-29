@@ -4,7 +4,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"errors"
-	"github.com/CarsonSlovoka/go-jwt"
+	"github.com/CarsonSlovoka/jwt"
 	"testing"
 )
 

@@ -4,7 +4,7 @@ import (
 	"crypto/subtle"
 	"errors"
 	"fmt"
-	"github.com/CarsonSlovoka/go-jwt"
+	"github.com/CarsonSlovoka/jwt"
 	"time"
 )
 
