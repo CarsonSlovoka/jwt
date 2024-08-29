@@ -56,6 +56,10 @@ func (m *SigningMethodHMAC) Verify(
 		return fmt.Errorf("HMAC verify expects []byte. %w", ErrInvalidKeyType)
 	}
 
+	if !m.Hash.Available() {
+		return ErrHashUnavailable
+	}
+
 	// 加簽本次的內容
 	hasher := hmac.New(m.Hash.New, privateKey)
 	hasher.Write(signingBytes)

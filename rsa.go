@@ -54,6 +54,10 @@ func (m *SigningMethodRSA) Verify(
 		return fmt.Errorf("RSA verify expects *rsa.PublicKey. %w", ErrInvalidKeyType)
 	}
 
+	if !m.Hash.Available() {
+		return ErrHashUnavailable
+	}
+
 	// 加簽本次的內容
 	hasher := m.Hash.New()
 	hasher.Write(signingBytes)
