@@ -2,7 +2,9 @@ package jwt_test
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
@@ -136,6 +138,28 @@ func TestNew_ed25519(t *testing.T) {
 
 	if err = vdFunc(nil, nil, func(token *jwt.Token) (key any, err error) {
 		return publicKey, nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNew_ecdsa(t *testing.T) {
+	token := jwt.New(jwt.SigningMethodECDSA512)
+	key, _ := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+	bsToken, err := token.SignedBytes(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vdFunc, err := parser.New().Parse(string(bsToken), func(method string) (jwt.ISigningMethod, error) {
+		return jwt.SigningMethodECDSA512, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = vdFunc(nil, nil, func(token *jwt.Token) (any, error) {
+		return &key.PublicKey, nil
 	}); err != nil {
 		t.Fatal(err)
 	}

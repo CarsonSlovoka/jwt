@@ -47,6 +47,7 @@ func (m *SigningMethodED25519) Sign(signingBytes []byte, key any) ([]byte, error
 	return signature, nil
 }
 
+// Verify implements the ISigningMethod interface
 func (m *SigningMethodED25519) Verify(signingBytes []byte, signature []byte, key any) error {
 	publicKey, ok := key.(ed25519.PublicKey)
 	if !ok {

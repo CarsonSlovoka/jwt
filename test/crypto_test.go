@@ -5,7 +5,9 @@ import (
 	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/ecdsa"
 	"crypto/ed25519"
+	"crypto/elliptic"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/rsa"
@@ -286,5 +288,41 @@ func Test_cryptoEd25519(t *testing.T) {
 	// 驗證
 	if !ed25519.Verify(publicKey, message, signature) {
 		t.Fatal("invalid")
+	}
+}
+
+func Test_ecdsa(t *testing.T) {
+	// Generate private key
+	var privateKey, otherPrivateKey *ecdsa.PrivateKey
+	var err error
+	privateKey, err = ecdsa.GenerateKey(
+		elliptic.P256(), // P384() P521()
+		rand.Reader,
+	)
+	if err != nil {
+		t.Fatalf("Failed to generate private key: %v", err)
+	}
+
+	// Sign
+	hash := sha256.Sum256([]byte(signingString))
+	r, s, err := ecdsa.Sign(rand.Reader, privateKey, hash[:])
+	if err != nil {
+		t.Fatalf("Failed to sign: %v", err)
+	}
+
+	// Verify
+	publicKey := &privateKey.PublicKey
+	if !ecdsa.Verify(publicKey, hash[:], r, s) {
+		t.Fatal("Signature verification failed")
+	}
+
+	// Invalid signature
+	otherPrivateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("Failed to generate other private key: %v", err)
+	}
+	otherPublicKey := &otherPrivateKey.PublicKey
+	if ecdsa.Verify(otherPublicKey, hash[:], r, s) {
+		t.Fatal("Signature verification should fail with different key")
 	}
 }
